@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+<meta charset="UTF-8">
+<title>Mini Game Hidden Numbers</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  input, button { padding: 10px; font-size: 16px; margin: 5px; }
+  .success { color: green; margin: 10px 0; }
+  .error { color: red; margin: 10px 0; }
+  ul { padding-left: 20px; }
+
+  .prize {
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, #ffcc00, #ff3300, #ffcc00);
+    background-size: 200% 200%;
+    color: white;
+    border-radius: 10px;
+    animation: gradientMove 3s ease infinite, pulse 1.5s infinite;
+    box-shadow: 0 0 20px #ffcc00, 0 0 30px #ff3300;
+  }
+
+  @keyframes gradientMove {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+  }
+
+  @keyframes pulse {
+    0% {transform: scale(1);}
+    50% {transform: scale(1.05);}
+    100% {transform: scale(1);}
+  }
+
+  #topMessage {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0066cc;
+    margin-bottom: 20px;
+    text-align: center;
+    animation: moveUp 1s ease;
+  }
+
+  @keyframes moveUp {
+    0% {transform: translateY(-20px); opacity: 0;}
+    100% {transform: translateY(0); opacity: 1;}
+  }
+</style>
+</head>
+<body>
+
+<div id="topMessage">
+  OHEREZA ubutumwa bugufi kuri 0792522881 maze uhabwe umubare ushobora gutuma wihabwa amafaranga angana na 50,000 FRW!
+</div>
+
+<div class="prize">Amahirwe yo kubona amafaranga angana na 50,000 FRW!</div>
+
+<!-- ✅ HANO NI HO HAHINDUTSE -->
+<input 
+  type="text" 
+  id="userNumber" 
+  placeholder="Andika umubare" 
+  inputmode="numeric" 
+  pattern="[0-9]*"
+/>
+
+<button onclick="process()">Emeza</button>
+
+<div id="msg"></div>
+
+<h3>History</h3>
+<ul id="history"></ul>
+
+<script>
+// ================= LOCAL STORAGE SETUP =================
+const defaultNumbers = [0,100,200,300,400,500,600,700,800,900];
+
+let availableNumbers = JSON.parse(localStorage.getItem("availableNumbers"));
+if (!availableNumbers) {
+  availableNumbers = [...defaultNumbers];
+  localStorage.setItem("availableNumbers", JSON.stringify(availableNumbers));
+}
+
+const hiddenMultipliers = [1,2,3,4,5,6,7,10,15,20,30,50];
+
+// ================= PROCESS FUNCTION =================
+function process() {
+  const num = Number(document.getElementById("userNumber").value);
+  const msg = document.getElementById("msg");
+  msg.innerHTML = "";
+
+  if (!availableNumbers.includes(num)) {
+    msg.innerHTML = "<div class='error'>Uyu mubare ntabwo wemerewe cyangwa umaze gukoreshwa!</div>";
+    return;
+  }
+
+  let multiplier = hiddenMultipliers[Math.floor(Math.random() * hiddenMultipliers.length)];
+  let result = num === 0 ? multiplier : num * multiplier;
+
+  // Save history
+  const record = { result, time: new Date().toLocaleString() };
+  let data = JSON.parse(localStorage.getItem("records")) || [];
+  data.push(record);
+  localStorage.setItem("records", JSON.stringify(data));
+
+  // Update top message
+  const topMsg = document.getElementById("topMessage");
+  topMsg.innerHTML = `OHEREZA ubutumwa bugufi kuri 0792522881, umubare ${num} ushobora gutuma wihabwa amafaranga angana na ${result} FRW!`;
+  topMsg.style.animation = "none";
+  topMsg.offsetHeight;
+  topMsg.style.animation = "moveUp 1s ease";
+
+  msg.innerHTML = `<div class="success">Amafaranga angana na: ${result} FRW</div>`;
+
+  // REMOVE USED NUMBER FOREVER
+  availableNumbers = availableNumbers.filter(n => n !== num);
+  localStorage.setItem("availableNumbers", JSON.stringify(availableNumbers));
+
+  if (availableNumbers.length === 0) {
+    msg.innerHTML += "<br><div class='error'>Imibare yose yaramaze gukoreshwa!</div>";
+  }
+
+  document.getElementById("userNumber").value = "";
+  loadHistory();
+}
+
+// ================= LOAD HISTORY =================
+function loadHistory() {
+  const history = document.getElementById("history");
+  history.innerHTML = "";
+  const data = JSON.parse(localStorage.getItem("records")) || [];
+  data.forEach((item, i) => {
+    const li = document.createElement("li");
+    li.textContent = `${i+1}. Amafaranga angana na: ${item.result} FRW (${item.time})`;
+    history.appendChild(li);
+  });
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>
